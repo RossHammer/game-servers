@@ -1,24 +1,23 @@
-#!/bin/bash
-
-WEBHOOK=https://discordapp.com/api/webhooks/475448222781931530/v5fk3PPT26K24moz9qF5-Sp8Eqpxy81CI2EdptL0b_mWb64sZf7qVsZgfr-EL2DIi-dt
 discord() {
-    curl -X POST -F "content=$1" "$WEBHOOK"
+    curl -sSf -X POST -F "content=$1" "$DISCORD_WEBHOOK"
 }
 
+yum install -y jq
 yum upgrade -y
 
 curl -L https://github.com/itzg/rcon-cli/releases/download/1.4.0/rcon-cli_1.4.0_linux_amd64.tar.gz | tar -xzf - -C /bin
 curl -L https://www.factorio.com/get-download/latest/headless/linux64 | tar -xJ -f - -C /opt
 aws s3 sync --no-progress s3://glitch/factorio/game /opt/factorio
+RCON_PASSWORD=$(jq -r .game_password /opt/factorio/data/server-settings.json)
 
 nohup /opt/factorio/bin/x64/factorio --start-server /opt/factorio/saves/save.zip \
-    --rcon-port 27015 --rcon-password "$(jq -r .game_password /opt/factorio/data/server-settings.json)" \
+    --rcon-port 27015 --rcon-password "$RCON_PASSWORD" \
     --server-settings /opt/factorio/data/server-settings.json --console-log /var/log/factorio_chat.log \
     >> /var/log/factorio.log &
 FACTORIO_PID=$!
 sleep 10
 echo "Factorio running pid:$FACTORIO_PID"
-discord "Factorio running at: $(curl http://169.254.169.254/latest/meta-data/public-ipv4)"
+discord "Factorio running at: $(curl -sS http://169.254.169.254/latest/meta-data/public-ipv4)"
 
 stop_server() {
     [ -z "$SHUTDOWN" ] || sleep 60
@@ -50,7 +49,7 @@ upload() {
 
 rcon() {
     if kill -0 $FACTORIO_PID; then
-        rcon-cli --password pass $*
+        rcon-cli --password "$RCON_PASSWORD" $*
     else
         >&2 echo "Factorio not running"
         return 1
