@@ -63,7 +63,7 @@ async function startGame(name) {
     return `${name} is already running at ${await getIp(name)}`;
   }
 
-  winston.info(`Launching spot fleet for ${name}`);
+  logger.info(`Launching spot fleet for ${name}`);
   await ec2.requestSpotFleet({
     SpotFleetRequestConfig: {
       AllocationStrategy: 'lowestPrice',
