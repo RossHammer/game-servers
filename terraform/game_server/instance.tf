@@ -1,7 +1,31 @@
 locals {
   script = <<EOF
 #!/bin/bash
-DISCORD_WEBHOOK=${var.discord_webhook}
+PUBLIC_IP=$$(curl -sS http://169.254.169.254/latest/meta-data/public-ipv4)
+CHANGE_BATCH=$$(cat <<DATA
+{
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "${var.name}.${data.aws_route53_zone.rosshammer.name}",
+        "Type": "A",
+        "TTL": 300,
+        "ResourceRecords": [ { "Value": "$$PUBLIC_IP" } ]
+      }
+    }
+  ]
+}
+DATA)
+aws route53 change-resource-record-sets --hosted-zone-id "${data.aws_route53_zone.rosshammer.id}" --change-batch "$$CHANGE_BATCH"
+
+discord() {
+  curl -sSf -X POST -F "content=$1" "${var.discord_webhook}"
+}
+LOCATION="${var.name}.${replace(data.aws_route53_zone.rosshammer.name, "/\\.$$/", "")} ($$PUBLIC_IP)"
+
+yum upgrade -y
+
 ${trimspace(file("${var.init_script_path}"))}
 EOF
 }

@@ -24,14 +24,15 @@ async function spotInstancesAreChanging() {
     .some(r => ['pending_fulfillment', 'pending_termination'].includes(r.ActivityStatus)
       || ['submitted', 'cancelled_running', 'cancelled_terminating', 'modifying'].includes(r.SpotFleetRequestState));
 }
-async function getIp(name) {
+async function getLocation(name) {
   const result = await ec2.describeInstances({
     Filters: [
       { Name: 'tag:Name', Values: [name] },
       { Name: 'instance-state-name', Values: ['pending', 'running', 'shutting-down', 'stopping'] },
     ],
   }).promise();
-  return [].concat(...result.Reservations.map(r => r.Instances)).map(i => i.PublicIpAddress)[0];
+  const ip = [].concat(...result.Reservations.map(r => r.Instances)).map(i => i.PublicIpAddress)[0];
+  return `${name}.rosshammer.com (${ip})`;
 }
 
 async function getAccount() {
@@ -59,8 +60,8 @@ async function startGame(name) {
   if (await spotInstancesAreChanging()) {
     return "The system's state is currently changing. Unable to launch game";
   }
-  if (await getIp(name)) {
-    return `${name} is already running at ${await getIp(name)}`;
+  if (await getLocation(name)) {
+    return `${name} is already running at ${await getLocation(name)}`;
   }
 
   logger.info(`Launching spot fleet for ${name}`);
@@ -106,7 +107,7 @@ client.on('message', async (message) => {
       if (action === 'start') {
         result = await startGame(name);
       } else if (action === 'status') {
-        result = `${name}: ${(await getIp(name)) || 'not running'}`;
+        result = `${name}: ${(await getLocation(name)) || 'not running'}`;
       } else {
         result = usage;
       }

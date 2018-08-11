@@ -60,7 +60,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "policy" {
-  name = "s3"
+  name = "instance"
   role = "${aws_iam_role.role.id}"
 
   policy = <<EOF
@@ -76,6 +76,11 @@ resource "aws_iam_role_policy" "policy" {
       "Action": "s3:ListBucket",
       "Effect": "Allow",
       "Resource": "arn:aws:s3:::glitch"
+    },
+    {
+      "Action": "route53:ChangeResourceRecordSets",
+      "Effect": "Allow",
+      "Resource": "arn:aws:route53:::hostedzone/${data.aws_route53_zone.rosshammer.id}"
     }
   ]
 }

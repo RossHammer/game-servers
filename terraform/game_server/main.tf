@@ -27,3 +27,7 @@ variable "key_name" {
 }
 
 resource "aws_default_vpc" "default" {}
+
+data "aws_route53_zone" "rosshammer" {
+  name = "rosshammer.com."
+}

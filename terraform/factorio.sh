@@ -1,10 +1,4 @@
-discord() {
-    curl -sSf -X POST -F "content=$1" "$DISCORD_WEBHOOK"
-}
-
 yum install -y jq
-yum upgrade -y
-
 curl -L https://github.com/itzg/rcon-cli/releases/download/1.4.0/rcon-cli_1.4.0_linux_amd64.tar.gz | tar -xzf - -C /bin
 curl -L https://www.factorio.com/get-download/latest/headless/linux64 | tar -xJ -f - -C /opt
 aws s3 sync --no-progress s3://glitch/factorio/game /opt/factorio
@@ -17,7 +11,7 @@ nohup /opt/factorio/bin/x64/factorio --start-server /opt/factorio/saves/save.zip
 FACTORIO_PID=$!
 sleep 10
 echo "Factorio running pid:$FACTORIO_PID"
-discord "Factorio running at: $(curl -sS http://169.254.169.254/latest/meta-data/public-ipv4)"
+discord "Factorio running at: $LOCATION"
 
 stop_server() {
     [ -z "$SHUTDOWN" ] || sleep 60
