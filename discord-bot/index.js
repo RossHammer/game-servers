@@ -118,9 +118,17 @@ client.on('message', async (message) => {
   }
 });
 
-
+let token;
+if (process.env.BOT_TOKEN) {
+  token = process.env.BOT_TOKEN;
+}
 if (process.argv.length === 3) {
-  client.login(process.argv[2]);
+  [, , token] = process.argv;
+}
+
+if (token) {
+  client.login(token);
 } else {
-  logger.error('Invalid argument count');
+  logger.error('Missing bot token. Provided as only argument or BOT_TOKEN variable');
+  process.exitCode = 1;
 }
