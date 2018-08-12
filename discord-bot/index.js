@@ -32,7 +32,9 @@ async function getLocation(name) {
     ],
   }).promise();
   const ip = [].concat(...result.Reservations.map(r => r.Instances)).map(i => i.PublicIpAddress)[0];
-  return `${name}.rosshammer.com (${ip})`;
+  if (ip) {
+    return `${name}.rosshammer.com (${ip})`;
+  }
 }
 
 async function getAccount() {
